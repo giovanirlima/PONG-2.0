@@ -27,5 +27,14 @@ namespace Controllers
         {
             return _animalServices.GetAll();
         }
+
+
+
+        #region Animal DP
+        public bool InsertAnimalDP(Animal animal)
+        {
+            return _animalServices.InsertAnimalDP(animal);
+        }
+        #endregion
     }
 }

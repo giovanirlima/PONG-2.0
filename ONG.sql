@@ -5,7 +5,7 @@ USE ONG;
 CREATE TABLE Pessoa(
 	CPF VARCHAR(14) CONSTRAINT PK_Pessoa PRIMARY KEY,
 	Nome VARCHAR(50) NOT NULL,	
-	Nascimento DATE,
+	Nascimento date,
 	Sexo VARCHAR(10),
 	Rua VARCHAR(20),
 	Numero VARCHAR(10),
@@ -28,7 +28,12 @@ CREATE TABLE Pessoa_Adota_Animal(
 	CONSTRAINT FK_Pessoa_Adota_Animal PRIMARY KEY (CHIP));
 
 CREATE TABLE Animais_Disponiveis(
-	CHIP INT CONSTRAINT PK_Animais_Disp FOREIGN KEY (CHIP) REFERENCES Animal(CHIP),
+	CHIP INT IDENTITY CONSTRAINT PK_Animais_Disp FOREIGN KEY (CHIP) REFERENCES Animal(CHIP),
+	Familia VARCHAR(20),
 	CONSTRAINT PK_Animais_Disponiveis PRIMARY KEY(CHIP));
 
-DELETE Pessoa_Adota_Animal WHERE CPF = '123'
+select * from Pessoa
+
+select * from Animal
+
+INSERT Animais_Disponiveis() VALUES();

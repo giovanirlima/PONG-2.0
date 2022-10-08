@@ -7,6 +7,11 @@ namespace Services.Interface
     {
         bool InsertAnimal(Animal animal);
         List<Animal> GetAll();
+
+
+        #region AnimalDP
+        bool InsertAnimalDP(Animal animal);
+        #endregion
     }
 
 

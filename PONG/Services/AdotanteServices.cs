@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Dapper;
 using Models;
 using Models.Database;
@@ -23,7 +24,25 @@ namespace Services
                 db.Open();
                 db.Execute(Adotante.INSERT, adotante);
                 return true;
-            }            
+            }
+        }
+
+        public bool GetSpecific(string cpf)
+        {            
+            Adotante adotante = new();
+
+            using (var db = new SqlConnection(_conexao))
+            {
+                db.Open();
+                var query = $"SELECT * FROM Pessoa WHERE CPF = {cpf}";
+                adotante = db.Query<Adotante>(query).FirstOrDefault();
+
+                if (adotante != null)
+                {
+                    return true;
+                }              
+                return false;
+            }
         }
 
         public List<Adotante> GetAll()
@@ -32,7 +51,7 @@ namespace Services
             {
                 db.Open();
                 var adotantes = db.Query<Adotante>(Adotante.SELECT);
-                return (List<Adotante>) adotantes;
+                return (List<Adotante>)adotantes;
             }
         }
     }

@@ -19,6 +19,11 @@ namespace Controllers
             return _adotanteServices.InsertAdotante(adotante);
         }
 
+        public bool GetSpecific(string cpf)
+        {
+            return _adotanteServices.GetSpecific(cpf);
+        }
+
         public List<Adotante> GetAll()
         {
             return _adotanteServices.GetAll();
