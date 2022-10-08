@@ -24,7 +24,7 @@ CREATE TABLE Animal(
 CREATE TABLE Pessoa_Adota_Animal(
 	CPF VARCHAR(14) CONSTRAINT FK_Pessoa FOREIGN KEY (CPF) REFERENCES PESSOA(CPF),
 	CHIP INT CONSTRAINT FK_Animal FOREIGN KEY (CHIP) REFERENCES Animal(CHIP),
-	Quantidade int,
+	Quantidade INT,
 	CONSTRAINT FK_Pessoa_Adota_Animal PRIMARY KEY (CHIP));
 
 CREATE TABLE Animais_Disponiveis(
@@ -36,4 +36,7 @@ select * from Pessoa
 
 select * from Animal
 
+select * from Animais_Disponiveis
+
 INSERT Animais_Disponiveis() VALUES();
+

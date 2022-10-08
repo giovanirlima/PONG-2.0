@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Dapper;
 using Models;
 using Models.Database;
@@ -24,6 +25,24 @@ namespace Services
                 db.Execute(Animal.INSERT, animal);
                 return true;
             }            
+        }
+
+        public bool GetSpecific(int chip)
+        {
+            Adotante adotante = new();
+
+            using (var db = new SqlConnection(_conexao))
+            {
+                db.Open();
+                var query = $"SELECT * FROM Animal WHERE CHIP = {chip}";
+                adotante = db.Query<Adotante>(query).FirstOrDefault();
+
+                if (adotante != null)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
         public List<Animal> GetAll()
         {

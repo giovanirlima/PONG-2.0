@@ -6,6 +6,7 @@ namespace Services.Interface
     public interface IAnimalServices
     {
         bool InsertAnimal(Animal animal);
+        bool GetSpecific(int chip);
         List<Animal> GetAll();
 
 

@@ -333,9 +333,8 @@ namespace PONG
             }
 
             Mensagens.FailCadastrado();   
-        }
-        /*
-        static void InsertAdotarAnimais(SqlConnection conexao)
+        }        
+        static void InsertAdotarAnimais()
         {
             string cpf;
             int n = 0, quantidade = 0, chip = 0;
@@ -398,33 +397,13 @@ namespace PONG
 
             } while (validacao);
 
-            conexao.Open(); // Abrindo conexão com banco
-
-            cmd = new SqlCommand("SELECT * FROM Pessoa WHERE CPF = @CPF", conexao); //Comando em codigo sql para percorrer a tabela pessoa
-            //e verificar se o cpf digitado, já possue cadastro
-
-            cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            if (!new AdotanteController().GetSpecific(cpf))
             {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        quantidade++;
-                    }
-                }
-            }
-
-            if (quantidade == 0)
-            {
-                Console.WriteLine("\nADOTANTE NÃO POSSUE CADASTRO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.Write("\nADOTANTE NÃO POSSUE CADASTRO!");
                 return;
             }
 
-            conexao.Close(); // fechando conexão
+           
 
             quantidade = 0; // variavel sera re-utilizada, por isso foi atribuido o valor 0
 
@@ -452,33 +431,29 @@ namespace PONG
 
             } while (validacao);
 
-            conexao.Open();//Abrindo conexão
-
-            cmd = new SqlCommand("SELECT * FROM Animais_Disponiveis WHERE CHIP = @CHIP", conexao); //Codigo de sql com instruções
-            //Para percorrer a lista de animais dispiniveis e verificar se o CHIP digitado existe e está disponivel.
-
-            cmd.Parameters.Add(new SqlParameter("@CHIP", chip)); //Passando o parametro para ser encaminhado
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            if (new AdotanteAdotaAnimalController().GetSpecific(chip))
             {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        quantidade++;
-                    }
-                }
-            }
-
-            if (quantidade == 0)
-            {
-                Console.WriteLine("\nANIMAL NÃO POSSUE CADASTRO OU JÁ FOI ADOTADO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.Write("\nANIMAL NÃO POSSUE CADASTRO OU JÁ FOI ADOTADO!");
                 return;
             }
 
-            conexao.Close(); // Fechando conexão
+            var relacao = new AdotanteAdotaAnimalController().GetAAAnimal(cpf);
+
+            if (relacao == null)
+            {
+                var aaa = new AdotanteAdotaAnimal()
+                {
+                    CPF = cpf,
+                    CHIP = chip,
+                    Quantidade = 1
+                };
+                                
+                if (new AdotanteAdotaAnimalController().InsertAAAnimal(aaa))
+                {
+                    
+                }
+
+            }
 
             quantidade = 0; // variavel sera re-utilizada, por isso foi atribuido o valor 0
 
@@ -551,7 +526,7 @@ namespace PONG
             conexao.Close();
         }
        
-
+        /*
         #region Editar Tabelas
         static void EditarDadosAdotantes(SqlConnection conexao)
         {
