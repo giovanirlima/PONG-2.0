@@ -26,7 +26,24 @@ namespace Services
                 return true;
             }
         }
-
+        public bool UpdateAdotante(string cpf, string paramentro, string value)
+        {
+            using (var db = new SqlConnection(_conexao))
+            {
+                var query = $"UPDATE Pessoa SET {paramentro} = '{value}' WHERE CPF = '{cpf}'";
+                db.Execute(query);
+                return true;
+            }
+        }
+        public bool UpdateEndereco(string cpf, string value, string value2, string value3, string value4, string value5)
+        {
+            using (var db = new SqlConnection(_conexao))
+            {
+                var query = $"UPDATE Pessoa SET Rua = '{value}', Numero = '{value2}', Bairro = '{value3}', Cidade = '{value4}', Estado = '{value5}' WHERE CPF = '{cpf}'";
+                db.Execute(query);
+                return true;
+            }
+        }
         public bool GetSpecific(string cpf)
         {            
             Adotante adotante = new();
@@ -44,7 +61,17 @@ namespace Services
                 return false;
             }
         }
+        public Adotante GetOne(string cpf)
+        {           
+            using (var db = new SqlConnection(_conexao))
+            {
+                db.Open();
+                var query = $"SELECT * FROM Pessoa WHERE CPF = '{cpf}'";
+                var adotante = db.Query<Adotante>(query).FirstOrDefault();
 
+                return adotante;
+            }
+        }
         public List<Adotante> GetAll()
         {
             using (var db = new SqlConnection(_conexao))

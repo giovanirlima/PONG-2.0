@@ -9,8 +9,8 @@ namespace Models
         public readonly static string INSERT = "INSERT Pessoa VALUES(@CPF, @NOME, @NASCIMENTO, @SEXO, @RUA, @NUMERO, @BAIRRO, @CIDADE, @ESTADO, @TELEFONE)";
         public readonly static string SELECT = "SELECT * FROM Pessoa";
         public readonly static string SELECTESP = "SELECT * FROM Pessoa WHERE CPF = @CPF";
-        public readonly static string DELETEPA = "DELETE Pessoa_Adota_Animal WHERE CPF = @CPF";
-        public readonly static string DELETE = "DELETE Pessoa WHERE CPF = @CPF";
+
+
         #endregion
 
         #region Properts

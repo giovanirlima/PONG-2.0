@@ -11,6 +11,7 @@ namespace Services.Interface
     {
         bool InsertAAAnimal(AdotanteAdotaAnimal animal);
         bool DeleteADisponivel(int chip);
+        int GetQuantidadeAnimaisAdotados(string cpf);
         bool GetSpecific(int aaa);
         AdotanteAdotaAnimal GetAAAnimal(string cpf);
         List<AdotanteAdotaAnimal> GetAll();

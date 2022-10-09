@@ -34,9 +34,20 @@ namespace Services
             using (var db = new SqlConnection(_conexao))
             {
                 db.Open();
-                var query = $"DELETE FROM Animais_Disponiveis WHERE CHIP = @CHIP";
-                db.Execute(query, chip);
+                var query = $"DELETE FROM Animais_Disponiveis WHERE CHIP = {chip}";
+                db.Execute(query);
                 return true;
+            }
+        }
+        public int GetQuantidadeAnimaisAdotados(string cpf)
+        {
+            using (var db = new SqlConnection(_conexao))
+            {
+                var query = $"SELECT Count(1) FROM Pessoa_Adota_Animal WHERE CPF = {cpf}";
+
+                var quantidadeAnimaisAdotados = db.Query<int>(query).FirstOrDefault();
+
+                return quantidadeAnimaisAdotados;
             }
         }
         public AdotanteAdotaAnimal GetAAAnimal(string cpf)
@@ -51,13 +62,13 @@ namespace Services
         }
         public bool GetSpecific(int chip)
         {
-            AdotanteAdotaAnimal adotanteAdotaAnimal = new();
+            Animal adotanteAdotaAnimal = new();
 
             using (var db = new SqlConnection(_conexao))
             {
                 db.Open();
                 var query = $"SELECT * FROM Animais_Disponiveis WHERE CHIP = {chip}";
-                adotanteAdotaAnimal = db.Query<AdotanteAdotaAnimal>(query).FirstOrDefault();
+                adotanteAdotaAnimal = db.Query<Animal>(query).FirstOrDefault();
 
                 if (adotanteAdotaAnimal != null)
                 {

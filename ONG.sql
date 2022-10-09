@@ -32,11 +32,4 @@ CREATE TABLE Animais_Disponiveis(
 	Familia VARCHAR(20),
 	CONSTRAINT PK_Animais_Disponiveis PRIMARY KEY(CHIP));
 
-select * from Pessoa
-
-select * from Animal
-
-select * from Animais_Disponiveis
-
-INSERT Animais_Disponiveis() VALUES();
 

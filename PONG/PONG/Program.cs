@@ -15,7 +15,7 @@ namespace PONG
             string nome, cpf, sexo, telefone, rua, numero, bairro, cidade, estado;
             DateTime nascimento = new DateTime();
             char resposta = 'a';
-            bool validacao;         
+            bool validacao;
 
             Console.Clear();
 
@@ -82,7 +82,7 @@ namespace PONG
                 }
 
             } while (validacao);
-            
+
             if (new AdotanteController().GetSpecific(cpf))
             {
                 Console.Write("\nADOTANTE JÁ CADASTRADO!");
@@ -165,7 +165,7 @@ namespace PONG
             int opcao = 0;
             char resposta = 'a';
             bool validacao;
-            Animal animal;           
+            Animal animal;
 
             Console.Clear();
             //Tela de interação com usuário, com validação de erro na resposta
@@ -316,7 +316,7 @@ namespace PONG
                 Raca = raca,
                 Sexo = sexo,
                 Nome = "NÃO INFORMADO"
-            };          
+            };
 
             if (new AnimalController().InsertAnimal(animal))
             {
@@ -329,18 +329,17 @@ namespace PONG
                 {
                     Mensagens.SucessCadastrado();
                     return;
-                }                
+                }
             }
 
-            Mensagens.FailCadastrado();   
-        }        
-        static void InsertAdotarAnimais()
+            Mensagens.FailCadastrado();
+        }
+        static void AdicionarAnimaisAdotados()
         {
             string cpf;
-            int n = 0, quantidade = 0, chip = 0;
+            int chip = 0;
             char resposta = 'a';
-            bool validacao;
-            SqlCommand cmd;
+            bool validacao;            
 
             Console.Clear();
 
@@ -403,10 +402,6 @@ namespace PONG
                 return;
             }
 
-           
-
-            quantidade = 0; // variavel sera re-utilizada, por isso foi atribuido o valor 0
-
             //Verificação de possivel valor null
             do
             {
@@ -429,113 +424,64 @@ namespace PONG
                     validacao = true;
                 }
 
-            } while (validacao);
+            } while (validacao);           
 
-            if (new AdotanteAdotaAnimalController().GetSpecific(chip))
+            if (!new AnimalController().GetSpecificAAA(chip))
             {
                 Console.Write("\nANIMAL NÃO POSSUE CADASTRO OU JÁ FOI ADOTADO!");
                 return;
             }
 
-            var relacao = new AdotanteAdotaAnimalController().GetAAAnimal(cpf);
+            var quantidadeAnimaisAdotados = new AdotanteAdotaAnimalController().GetQuantidadeAnimaisAdotados(cpf);
 
-            if (relacao == null)
+            if (quantidadeAnimaisAdotados == 0)
             {
-                var aaa = new AdotanteAdotaAnimal()
+                var adotante = new AdotanteAdotaAnimal()
                 {
                     CPF = cpf,
                     CHIP = chip,
                     Quantidade = 1
                 };
-                                
-                if (new AdotanteAdotaAnimalController().InsertAAAnimal(aaa))
+
+                if (new AdotanteAdotaAnimalController().InsertAAAnimal(adotante))
                 {
-                    
+                    if (new AdotanteAdotaAnimalController().DeleteADisponivel(chip))
+                    {
+                        Console.Write("\nANIMAL ADOTADO COM SUCESSO! :)");
+                        return;
+                    }
                 }
 
-            }
-
-            quantidade = 0; // variavel sera re-utilizada, por isso foi atribuido o valor 0
-
-            conexao.Open();
-
-            #region CARREGAR DADO PARA MANIPULAÇÃO
-            cmd = new SqlCommand("SELECT Quantidade FROM Pessoa_Adota_Animal WHERE CPF = @CPF", conexao);
-
-            cmd.CommandType = System.Data.CommandType.Text;
-
-            cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    quantidade = Convert.ToInt32(reader["Quantidade"]);
-                }
-            }
-            #endregion // Exemplo de Manupulação de dados do banco
-
-            conexao.Close();
-
-            conexao.Open();
-
-            cmd = new("INSERT INTO Pessoa_Adota_Animal VALUES(@CPF, @CHIP, @QUATIDADE);", conexao);
-
-            #region Exemplo de como pode ser feita a conexão com o banco
-            //cmd.CommandText = "INSERT INTO Pessoa_Adota_Animal VALUES(@CPF, @CHIP, @QUATIDADE);";
-
-            //cmd.Connection = conexao;
-            #endregion
-
-            cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-            cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-            cmd.Parameters.Add(new SqlParameter("@QUATIDADE", quantidade++));
-            try
-            {
-                n = cmd.ExecuteNonQuery();
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("\nANIMAL JÁ FOI ADOTADO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.Write("\nINFELIZMENTE NÃO FOI POSSÍVEL CONCLUIR A ADOÇÃO... :(");
                 return;
             }
 
-            if (n > 0)
+            var aaa = new AdotanteAdotaAnimal()
             {
-                cmd = new("DELETE FROM Animais_Disponiveis WHERE CHIP = @CHIP", conexao);
+                CPF = cpf,
+                CHIP = chip,
+                Quantidade = quantidadeAnimaisAdotados + 1
+            };
 
-                //cmd.CommandText = "INSERT INTO Pessoa_Adota_Animal VALUES(@CPF, @CHIP, @QUATIDADE);";
+            if (new AdotanteAdotaAnimalController().InsertAAAnimal(aaa))
+            {
+                if (new AdotanteAdotaAnimalController().DeleteADisponivel(chip))
+                {
+                    Console.Write("\nANIMAL ADOTADO COM SUCESSO! :)");
+                    return;
+                }
 
-                //cmd.Connection = conexao;
-
-                cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-
-                cmd.ExecuteNonQuery();
-
-                Console.WriteLine("\nANIMAL ADOTADO COM SUCESSO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.Write("\nINFELIZMENTE NÃO FOI POSSÍVEL CONCLUIR A ADOÇÃO... :(");
                 return;
             }
-
-
-            Console.WriteLine("\nDADOS INVÁLIDOS PARA ADOÇÃO!");
-            Console.ReadKey();
-            conexao.Close();
-        }
-       
-        /*
-        #region Editar Tabelas
-        static void EditarDadosAdotantes(SqlConnection conexao)
+        }        
+        static void EditarDadosAdotantes()
         {
-            string nome, cpf, sexo, telefone, rua, numero, bairro, cidade, estado;
+            string nome, cpf, sexo, telefone, rua, numero, bairro, cidade, estado, parametro;
             DateTime nascimento = new DateTime();
-            int opcao = 0, quantidade = 0;
+            int opcao = 0;
             char resposta = 'a';
-            bool validacao;
-            SqlCommand cmd;
+            bool validacao;            
 
             Console.Clear();
 
@@ -592,32 +538,11 @@ namespace PONG
 
             } while (validacao);
 
-            conexao.Open(); // Abrindo conexão
-
-            cmd = new SqlCommand("SELECT * FROM Pessoa WHERE CPF = @CPF", conexao); // Passando parametro em condigo sql para o banco, e inserindo o caminho da conexão
-
-            cmd.Parameters.Add(new SqlParameter("@CPF", cpf)); // adicionando parametro para condição do Where
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            if (!new AdotanteController().GetSpecific(cpf))
             {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        quantidade++;
-                    }
-                }
-            }
-
-            if (quantidade == 0)
-            {
-                Console.WriteLine("\nCLIENTE NÃO POSSUE CADASTRO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.Write("\nADOTANTE NÃO POSSUE CADASTRADO!");
                 return;
             }
-
-            conexao.Close(); // fechando conexão
 
             //Validando possivel error de usuario na opção
             Console.WriteLine("\nINFORME QUAL DADO DESEJA ALTERAR: ");
@@ -665,26 +590,15 @@ namespace PONG
 
                     } while (validacao);
 
-                    conexao.Open(); // Abrindo conexão
+                    parametro = "Nome";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Pessoa Set Nome = @NOME WHERE CPF = @CPF;"; //Aqui fiz o segundo exemple de montar os paramentros 
-                    //linguagem sql para enviar para o banco
-
-                    cmd.Connection = conexao; //Passei o caminho para conexão
-                    cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-                    cmd.Parameters.Add(new SqlParameter("@NOME", nome));
-
-                    int verificacao = cmd.ExecuteNonQuery(); // verificação para ver se o codigo realmente foi executado, valor retornar quantidade de linhas afetadas
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AdotanteController().UpdateAdotante(cpf, parametro, nome))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO!");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
 
                 case 2:
@@ -711,26 +625,17 @@ namespace PONG
 
                     } while (validacao);
 
-                    conexao.Open(); // Abrindo conexão
+                    parametro = "Nascimento";
 
-                    cmd = new();
+                    string conv = Convert.ToString(nascimento);
 
-                    cmd.CommandText = "UPDATE Pessoa Set Nascimento = @NASCIMENTO WHERE CPF = @CPF;"; //Aqui fiz o segundo exemple de montar os paramentros 
-                    //linguagem sql para enviar para o banco
-
-                    cmd.Connection = conexao; //Passei o caminho para conexão
-                    cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-                    cmd.Parameters.Add(new SqlParameter("@NASCIMENTO", nascimento));
-
-                    verificacao = cmd.ExecuteNonQuery(); // verificação para ver se o codigo realmente foi executado, valor retornar quantidade de linhas afetadas
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AdotanteController().UpdateAdotante(cpf, parametro, conv))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO!");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
 
                 case 3:
@@ -739,25 +644,15 @@ namespace PONG
                     Console.Write("INFORME O SEXO DO(A) ADOTANTE(Masculino | Feminino | Indefinido): ");
                     sexo = Console.ReadLine().ToUpper(); ;
 
-                    conexao.Open();
+                    parametro = "Sexo";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Pessoa Set Sexo = @SEXO WHERE CPF = @CPF;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-                    cmd.Parameters.Add(new SqlParameter("@SEXO", sexo));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AdotanteController().UpdateAdotante(cpf, parametro, sexo))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO!");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
 
                 case 4:
@@ -778,29 +673,13 @@ namespace PONG
                     Console.Write("INFORME O ESTADO: ");
                     estado = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
-
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Pessoa Set Rua = @RUA, Numero = @NUMERO, Bairro = @BAIRRO, Cidade = @CIDADE, Estado = @ESTADO WHERE CPF = @CPF;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-                    cmd.Parameters.Add(new SqlParameter("@RUA", rua));
-                    cmd.Parameters.Add(new SqlParameter("@NUMERO", numero));
-                    cmd.Parameters.Add(new SqlParameter("@BAIRRO", bairro));
-                    cmd.Parameters.Add(new SqlParameter("@CIDADE", cidade));
-                    cmd.Parameters.Add(new SqlParameter("@ESTADO", estado));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AdotanteController().UpdateEndereco(cpf, rua, numero, bairro, cidade, estado))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO!");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
 
 
@@ -810,35 +689,24 @@ namespace PONG
                     Console.Write("INFORME O TELEFONE DO ADOTANTE: ");
                     telefone = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
+                    parametro = "Telefone";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Pessoa Set Telefone = @TELEFONE WHERE CPF = @CPF;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-                    cmd.Parameters.Add(new SqlParameter("@TELEFONE", telefone));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AdotanteController().UpdateAdotante(cpf, parametro, telefone))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO!");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
             }
         }
-        static void EditarDadosAnimal(SqlConnection conexao)
+        static void EditarDadosAnimal()
         {
-            string raca, sexo, nome, familia;
-            int opcao = 0, quantidade = 0, chip = 0;
+            string raca, sexo, nome, familia, parametro;
+            int opcao = 0, chip = 0;
             char resposta = 'a';
-            bool validacao;
-            SqlCommand cmd;
+            bool validacao;            
 
             Console.Clear();
 
@@ -902,32 +770,11 @@ namespace PONG
 
             } while (validacao);
 
-            conexao.Open(); //Abrindo Conexão
-
-            cmd = new SqlCommand("SELECT * FROM Animal WHERE CHIP = @CHIP", conexao); // Passando parametro em linguagem sql e o caminho da conexão
-
-            cmd.Parameters.Add(new SqlParameter("@CHIP", chip)); //Passando o paramentro informado no @CHIP
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            if (!new AnimalController().GetSpecif(chip))
             {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        quantidade++;
-                    }
-                }
-            }
-
-            if (quantidade == 0)
-            {
-                Console.WriteLine("\nANIMAL NÃO POSSUE CADASTRO!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.WriteLine("\nANIMAL NAO POSSUE CADASTRO!");
                 return;
-            }
-
-            conexao.Close();
+            }           
 
             //Validação de possivel erro de digitação
             Console.WriteLine("\nINFORME QUAL DADO DESEJA ALTERAR: ");
@@ -964,25 +811,16 @@ namespace PONG
                     Console.Write("INFORME O NOME DO ANIMAL: ");
                     nome = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
-
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Animal Set Nome = @NOME WHERE CHIP = @CHIP;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-                    cmd.Parameters.Add(new SqlParameter("@NOME", nome));
-
-                    int verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    parametro = "Nome";
+                             
+                    if (new AnimalController().UpdateAnimal(chip, parametro, nome))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
+
                     break;
 
                 case 2:
@@ -991,25 +829,16 @@ namespace PONG
                     Console.Write("INFORME A RAÇA DO ANIMAL: ");
                     raca = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
+                    parametro = "Raca";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Animal Set Raca = @RACA WHERE CHIP = @CHIP;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-                    cmd.Parameters.Add(new SqlParameter("@RACA", raca));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AnimalController().UpdateAnimal(chip, parametro, raca))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
+                    
                     break;
 
                 case 3:
@@ -1018,25 +847,15 @@ namespace PONG
                     Console.Write("INFORME O SEXO DO ANIMAL: ");
                     sexo = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
+                    parametro = "Sexo";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Animal Set Sexo = @SEXO WHERE CHIP = @CHIP;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-                    cmd.Parameters.Add(new SqlParameter("@SEXO", sexo));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AnimalController().UpdateAnimal(chip, parametro, sexo))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();
                     break;
 
 
@@ -1046,36 +865,22 @@ namespace PONG
                     Console.Write("INFORME DE QUAL FAMILIA O ANIMAL PERTENCE: ");
                     familia = Console.ReadLine().ToUpper();
 
-                    conexao.Open();
+                    parametro = "Familia";
 
-                    cmd = new();
-
-                    cmd.CommandText = "UPDATE Animal SET Familia = @FAMILIA WHERE CHIP = @CHIP;";
-
-                    cmd.Connection = conexao;
-                    cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-                    cmd.Parameters.Add(new SqlParameter("@FAMILIA", familia));
-
-                    verificacao = cmd.ExecuteNonQuery();
-                    conexao.Close();
-
-                    if (verificacao > 0)
+                    if (new AnimalController().UpdateAnimal(chip, parametro, familia))
                     {
-                        Console.WriteLine("\nEDITADO COM SUCESSO");
-                        Console.ReadKey();
-                        break;
+                        Mensagens.SucessAlteracao();
+                        return;
                     }
+
+                    Mensagens.FailAlteracao();                   
                     break;
             }
-        }
-        #endregion      
-
-        #region Imprimir Tabelas
-        static void ImprimirDadosAdotantes(SqlConnection conexao)
+        }                         
+        static void ImprimirDadosAdotantes()
         {
             string cpf;
-            SqlCommand cmd = new();
-            int opcao = 0, quantidade = 0;
+            int opcao = 0;
             bool validacao;
 
             Console.Clear();
@@ -1127,118 +932,31 @@ namespace PONG
 
                 } while (validacao);
 
-                conexao.Open();
+                var adotante = new AdotanteController().GetOne(cpf);
 
-                cmd = new SqlCommand("SELECT * FROM Pessoa WHERE CPF = @CPF", conexao);
-
-                cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                if (adotante == null)
                 {
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            quantidade++;
-                        }
-                    }
-                }
-
-                if (quantidade == 0)
-                {
-                    Console.WriteLine("\nADOTANTE NÃO POSSUE CADASTRO!");
+                    Console.Write("\nADOTANTE NÃO CADASTRADO!");
                     Console.ReadKey();
-                    conexao.Close();
                     return;
                 }
-
-                conexao.Close();
-
-                conexao.Open();
-
-                #region CARREGAR DADO PARA MANIPULAÇÃO
-                //cmd = new SqlCommand("SELECT Quantidade FROM Pessoa_Adota_Animal WHERE CPF = @CPF", conexao);
-
-                //cmd.CommandType = System.Data.CommandType.Text;
-
-                //cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-                //using (SqlDataReader reader = cmd.ExecuteReader())
-                //{
-                //    while (reader.Read())
-                //    {
-                //        quantidade = Convert.ToInt32(reader["Quantidade"]);
-                //    }
-                //}
-                #endregion
-
-                cmd = new();
-
-                cmd.CommandText = "SELECT pessoa.Nome, pessoa.CPF, pessoa.Nascimento, pessoa.Telefone, pessoa.Sexo, " +
-                              "pessoa.Rua, pessoa.Numero, pessoa.Bairro, pessoa.Cidade, pessoa.Estado FROM Pessoa " +
-                              "WHERE CPF = @CPF;";
-
-
-                cmd.Connection = conexao;
-
-                cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    Console.Clear();
-                    while (reader.Read())
-                    {
-                        Console.WriteLine("DADOS ADOTANTE\n");
-                        Console.WriteLine($"NOME: {reader.GetString(0)}");
-                        Console.WriteLine($"CPF: {reader.GetString(1)}");
-                        Console.WriteLine($"NASCIMENTO: {reader.GetDateTime(2).ToShortDateString()}");
-                        Console.WriteLine($"TELEFONE: {reader.GetString(3)}");
-                        Console.WriteLine($"SEXO: {reader.GetString(4)}");
-                        Console.WriteLine($"RUA: {reader.GetString(5)} º{reader.GetString(6)}. {reader.GetString(7)}, {reader.GetString(8)} - {reader.GetString(9)}\n");
-
-                    }
-                }
-
-                Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
+                Console.Clear();
+                Console.WriteLine("ADOTANTE\n");
+                Console.WriteLine(adotante.ToString());
+                Console.WriteLine("PRESSIONE ENTER PARA SAIR");
                 Console.ReadKey();
-                conexao.Close();
                 return;
             }
-
             Console.Clear();
 
-            conexao.Open();
+            new AdotanteController().GetAll().ForEach(x => Console.WriteLine(x.ToString()));
 
-            #region OUTRA FORMA DE FAZER A LEITURA DO BANCO
-            //cmd.CommandText = "SELECT pessoa.Nome, pessoa.CPF, pessoa.Sexo, pessoa.Telefone, " +
-            //                  "pessoa.Rua, pessoa.Numero, pessoa.Bairro, pessoa.Cidade, pessoa.Estado FROM Pessoa;";
-            //cmd.Connection = conexao;
-            #endregion
-
-            cmd = new SqlCommand("SELECT pessoa.Nome, pessoa.CPF, pessoa.Nascimento, pessoa.Sexo, pessoa.Telefone, " +
-                                 "pessoa.Rua, pessoa.Numero, pessoa.Bairro, pessoa.Cidade, pessoa.Estado FROM Pessoa;", conexao);
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    Console.WriteLine("DADOS ADOTANTE\n");
-                    Console.WriteLine($"NOME: {reader.GetString(0)}");
-                    Console.WriteLine($"CPF: {reader.GetString(1)}");
-                    Console.WriteLine($"DATA DE NASCIMENTO: {reader.GetDateTime(2).ToShortDateString()}");
-                    Console.WriteLine($"TELEFONE: {reader.GetString(3)}");
-                    Console.WriteLine($"SEXO: {reader.GetString(4)}");
-                    Console.WriteLine($"RUA: {reader.GetString(5)} º{reader.GetString(6)}. {reader.GetString(7)}, {reader.GetString(8)} - {reader.GetString(9)}\n");
-                }
-            }
-
-            Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-            Console.ReadKey();
-            conexao.Close();
-        }
-        static void ImprimirDadosAnimais(SqlConnection conexao)
+            Console.Write("\nPRESSIONE ENTER PARA SAIR");
+            Console.Read();           
+        }        
+        static void ImprimirDadosAnimais()
         {
-            int opcao = 0, quantidade = 0, chip;
+            int opcao = 0, chip;
             bool validacao = false;
             SqlCommand cmd = new();
 
@@ -1291,308 +1009,45 @@ namespace PONG
 
                 } while (validacao);
 
-                conexao.Open();
+                var animal = new AnimalController().GetOne(chip);
 
-                cmd = new SqlCommand("SELECT * FROM Animal WHERE CHIP = @CHIP", conexao); //Mesmo exemplo dado em pontos anteriores
-
-                cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                if (animal == null)
                 {
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            quantidade++;
-                        }
-                    }
-                }
-
-                if (quantidade == 0)
-                {
-                    Console.WriteLine("\nANIMAL NÃO POSSUE CADASTRO!");
+                    Console.Write("\nANIMAL NÃO CADASTRADO");
                     Console.ReadKey();
-                    conexao.Close();
                     return;
                 }
-
-                conexao.Close();
-
-                conexao.Open();
-
-                #region CARREGAR DADO PARA MANIPULAÇÃO
-                //cmd = new SqlCommand("SELECT Quantidade FROM Pessoa_Adota_Animal WHERE CPF = @CPF", conexao);
-
-                //cmd.CommandType = System.Data.CommandType.Text;
-
-                //cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-                //using (SqlDataReader reader = cmd.ExecuteReader())
-                //{
-                //    while (reader.Read())
-                //    {
-                //        quantidade = Convert.ToInt32(reader["Quantidade"]);
-                //    }
-                //}
-                #endregion  //Deixei porque é algo muito importante 
-
-                cmd = new SqlCommand("SELECT animal.CHIP, animal.Familia, animal.Nome, animal.Raca, " +
-                                    "animal.Sexo FROM Animal WHERE CHIP = @CHIP", conexao);
-
-                cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    Console.Clear();
-                    while (reader.Read())
-                    {
-                        Console.WriteLine("DADOS DO ANIMAL\n");
-                        Console.WriteLine($"CHIP: {reader.GetInt32(0)}");
-                        Console.WriteLine($"FAMILIA: {reader.GetString(1)}");
-                        Console.WriteLine($"NOME: {reader.GetString(2)}");
-                        Console.WriteLine($"RACA: {reader.GetString(3)}");
-                        Console.WriteLine($"SEXO: {reader.GetString(4)}\n");
-                    }
-                }
-
-                Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-                Console.ReadKey();
-                conexao.Close();
-                return;
-            }
-
-            Console.Clear();
-
-            conexao.Open();
-
-            cmd = new SqlCommand("SELECT animal.CHIP, animal.Familia, animal.Nome, animal.Raca, " +
-                                 "animal.Sexo FROM Animal", conexao);
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    Console.WriteLine("DADOS DO ANIMAL\n");
-                    Console.WriteLine($"CHIP: {reader.GetInt32(0)}");
-                    Console.WriteLine($"FAMILIA: {reader.GetString(1)}");
-                    Console.WriteLine($"NOME: {reader.GetString(2)}");
-                    Console.WriteLine($"RACA: {reader.GetString(3)}");
-                    Console.WriteLine($"SEXO: {reader.GetString(4)}\n");
-                }
-            }
-
-            Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-            Console.ReadKey();
-            conexao.Close();
-        }
-        static void ImprimirDadosAnimaisDisponiveis(SqlConnection conexao)
-        {
-            int opcao = 0, quantidade = 0, chip = 0;
-            bool validacao;
-            SqlCommand cmd;
-
-            Console.Clear();
-
-            Console.WriteLine("IMPRIMIR ANIMAIS DISPINIVEIS\n");
-
-            Console.WriteLine("ESCOLHA A OPÇÃO DESEJA: \n");
-            Console.WriteLine("1 - IMPRIMIR TODOS ANIMAIS DISPONIVEIS PARA ADOÇÃO");
-            Console.WriteLine("2 - IMPRIMIR UM ESPECIFICO\n");
-            do
-            {
-                Console.Write("OPCÃO: ");
-                try
-                {
-                    opcao = int.Parse(Console.ReadLine());
-                    validacao = false;
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("\nPARAMETROS DE ENTRADA INVÁLIDO!\n");
-                    validacao = true;
-                }
-                if (opcao < 1 || opcao > 2)
-                {
-                    if (!validacao)
-                    {
-                        Console.WriteLine("\nOPÇÃO DIGITADA É INVÁLIDA!\n");
-                        validacao = true;
-                    }
-                }
-
-            } while (validacao);
-
-            if (opcao == 2)
-            {
                 Console.Clear();
-                //TRATATIVA DE ERROR
-                do
-                {
-                    Console.Write("INFORME O NÚMERO DO CHIP DO ANIMAL[OBRIGATÓRIO]: ");
-                    try
-                    {
-                        chip = int.Parse(Console.ReadLine());
-                        validacao = false;
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("\nPARAMETRO DE ENTRADA INVÁLIDO!\n");
-                        validacao = true;
-                    }
 
-                    if (chip == 0)
-                    {
-                        Console.WriteLine("\nCHIP OBRIGATÓRIO!\n");
-                        validacao = true;
-                    }
+                Console.WriteLine("ANIMAL\n");
 
-                } while (validacao);
-
-                conexao.Open();
-
-                cmd = new SqlCommand("SELECT * FROM Animais_Disponiveis WHERE CHIP = @CHIP", conexao);
-
-                cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            quantidade++;
-                        }
-                    }
-                }
-
-                if (quantidade == 0)
-                {
-                    Console.WriteLine("\nANIMAL NÃO POSSUE CADASTRO OU JÁ FOI ADOTADO!");
-                    Console.ReadKey();
-                    conexao.Close();
-                    return;
-                }
-
-                conexao.Close();
-
-                conexao.Open();
-
-                #region CARREGAR DADO PARA MANIPULAÇÃO
-                //cmd = new SqlCommand("SELECT Quantidade FROM Pessoa_Adota_Animal WHERE CPF = @CPF", conexao);
-
-                //cmd.CommandType = System.Data.CommandType.Text;
-
-                //cmd.Parameters.Add(new SqlParameter("@CPF", cpf));
-
-                //using (SqlDataReader reader = cmd.ExecuteReader())
-                //{
-                //    while (reader.Read())
-                //    {
-                //        quantidade = Convert.ToInt32(reader["Quantidade"]);
-                //    }
-                //}
-                #endregion
-
-                cmd = new SqlCommand("SELECT animal.CHIP, animal.Familia, animal.Nome, animal.Raca, " +
-                                    "animal.Sexo FROM Animal WHERE CHIP = @CHIP", conexao);
-
-                cmd.Parameters.Add(new SqlParameter("@CHIP", chip));
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    Console.Clear();
-                    while (reader.Read())
-                    {
-                        Console.WriteLine("DADOS DO ANIMAL\n");
-                        Console.WriteLine($"CHIP: {reader.GetInt32(0)}");
-                        Console.WriteLine($"FAMILIA: {reader.GetString(1)}");
-                        Console.WriteLine($"NOME: {reader.GetString(2)}");
-                        Console.WriteLine($"RACA: {reader.GetString(3)}");
-                        Console.WriteLine($"SEXO: {reader.GetString(4)}\n");
-                    }
-                }
-
-                Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-                Console.ReadKey();
-                conexao.Close();
+                Console.WriteLine(animal.ToString());
+                Console.Write("\nPRESSIONE ENTER PARA SAIR");
+                Console.Read();
                 return;
             }
 
             Console.Clear();
 
-            conexao.Open();
+            new AnimalController().GetAll().ForEach(x => Console.WriteLine(x.ToString()));
 
-            cmd = new SqlCommand("SELECT animal.CHIP, animal.Familia, animal.Nome, animal.Raca, " +
-                                 "animal.Sexo FROM Animal JOIN Animais_Disponiveis ON " +
-                                 "animais_disponiveis.CHIP = animal.CHIP ", conexao);
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                if (!reader.HasRows)
-                {
-                    Console.WriteLine("NÃO EXISTE ANIMAIS PARA ADOÇÃO NO MOMENTO!");
-                    Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-                    Console.ReadKey();
-                    conexao.Close();
-                    return;
-                }
-
-                while (reader.Read())
-                {
-                    Console.WriteLine("DADOS DO ANIMAL\n");
-                    Console.WriteLine($"CHIP: {reader.GetInt32(0)}");
-                    Console.WriteLine($"FAMILIA: {reader.GetString(1)}");
-                    Console.WriteLine($"NOME: {reader.GetString(2)}");
-                    Console.WriteLine($"RACA: {reader.GetString(3)}");
-                    Console.WriteLine($"SEXO: {reader.GetString(4)}\n");
-                }
-            }
-
-            Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
-            Console.ReadKey();
-            conexao.Close();
-        }
-        static void ImprimirDadosAdocao(SqlConnection conexao)
+            Console.Write("\nPRESSIONE ENTER PARA SAIR");
+            Console.Read();
+            return;            
+        }      
+        static void ImprimirDadosAdocao()
         {
             Console.Clear();
-            conexao.Open();
 
-            SqlCommand cmd = new();
+            Console.WriteLine("ANIMAIS ADOTADOS\n");
 
-            cmd.CommandText = "SELECT pessoa.Nome, pessoa.CPF, animal.CHIP, animal.Nome, animal.Familia, animal.Raca, animal.Sexo FROM Pessoa_Adota_Animal " +
-                              "JOIN Pessoa ON " +
-                              "pessoa.CPF = Pessoa_Adota_Animal.CPF " +
-                              "JOIN Animal ON " +
-                              "animal.CHIP = Pessoa_Adota_Animal.CHIP ";
+            new AdotanteAdotaAnimalController().GetAll().ForEach(x => Console.WriteLine(x.ToString()));
 
-
-            cmd.Connection = conexao;
-
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    Console.WriteLine("DADOS DA ADOÇÃO\n");
-                    Console.WriteLine($"Nome: {reader.GetString(0)}");
-                    Console.WriteLine($"CPF: {reader.GetString(1)}");
-                    Console.WriteLine($"CHIP: {reader.GetInt32(2)}");
-                    Console.WriteLine($"Nome: {reader.GetString(3)}");
-                    Console.WriteLine($"Familia: {reader.GetString(4)}");
-                    Console.WriteLine($"Raca: {reader.GetString(5)}");
-                    Console.WriteLine($"Sexo: {reader.GetString(6)}\n");
-
-                }
-            }
-
-            Console.WriteLine("Pressione enter para voltar ao menu anterior!");
-            Console.ReadKey();
-            conexao.Close();
-        }
-        #endregion
-        */
+            Console.WriteLine("PRESSIONE ENTER PARA VOLTAR AO MENU ANTERIOR!");
+            Console.ReadKey();            
+        }        
         static void IniciarSistema()
-        {            
+        {
             int opcao = 10;
             bool validacao; ;
 
@@ -1676,7 +1131,7 @@ namespace PONG
                             {
                                 case 1:
                                     AdicionarAdotantes();
-                                    
+                                    Console.ReadKey();
                                     break;
 
 
@@ -1684,65 +1139,69 @@ namespace PONG
                                     AdicionarAnimais();
                                     Console.ReadKey();
                                     break;
+
                             }
                         } while (opcao != 9);
                         break;
 
-                        /*  case 2:
-                              do
+                        case 2:
+                          do
+                          {
+                              opcao = 10;
+                              Console.Clear();
+
+                              Console.WriteLine("EDIÇÃO ONG ANIMAIS FELIZES");
+
+                              Console.WriteLine("\n\nSELECIONE UMA OPÇÃO: \n");
+                              Console.WriteLine("1 - ADOTANTE ");
+                              Console.WriteLine("2 - ANIMAL");
+                              Console.WriteLine("\n9 - VOLTAR AO MENU ANTERIOR");
+                              Console.Write("\nOpção: ");
+                              try
                               {
-                                  opcao = 10;
-                                  Console.Clear();
+                                  opcao = int.Parse(Console.ReadLine());
+                                  validacao = false;
 
-                                  Console.WriteLine("EDIÇÃO ONG ANIMAIS FELIZES");
-
-                                  Console.WriteLine("\n\nSELECIONE UMA OPÇÃO: \n");
-                                  Console.WriteLine("1 - ADOTANTE ");
-                                  Console.WriteLine("2 - ANIMAL");
-                                  Console.WriteLine("\n9 - VOLTAR AO MENU ANTERIOR");
-                                  Console.Write("\nOpção: ");
-                                  try
+                              }
+                              catch (Exception)
+                              {
+                                  Console.WriteLine("\nPARAMETRO DE ENTRADA INVÁLIDO!");
+                                  Console.WriteLine("PRESSIONE ENTER PARA ESCOLHER NOVAMENTE!");
+                                  validacao = true;
+                                  Console.ReadKey();
+                              }
+                              if (opcao < 1 || opcao > 2 && opcao != 9)
+                              {
+                                  if (!validacao)
                                   {
-                                      opcao = int.Parse(Console.ReadLine());
-                                      validacao = false;
-
-                                  }
-                                  catch (Exception)
-                                  {
-                                      Console.WriteLine("\nPARAMETRO DE ENTRADA INVÁLIDO!");
+                                      Console.WriteLine("\nOPÇÃO DIGITADA É INVÁLIDA!");
                                       Console.WriteLine("PRESSIONE ENTER PARA ESCOLHER NOVAMENTE!");
                                       validacao = true;
                                       Console.ReadKey();
                                   }
-                                  if (opcao < 1 || opcao > 2 && opcao != 9)
-                                  {
-                                      if (!validacao)
-                                      {
-                                          Console.WriteLine("\nOPÇÃO DIGITADA É INVÁLIDA!");
-                                          Console.WriteLine("PRESSIONE ENTER PARA ESCOLHER NOVAMENTE!");
-                                          validacao = true;
-                                          Console.ReadKey();
-                                      }
-                                  }
+                              }
 
-                                  switch (opcao)
-                                  {
-                                      case 1:
-                                          EditarDadosAdotantes(conexaoSql);
-                                          break;
+                              switch (opcao)
+                              {
+                                  case 1:
+                                      EditarDadosAdotantes();
+                                    Console.ReadKey();
+                                    break;
 
 
-                                      case 2:
-                                          EditarDadosAnimal(conexaoSql);
-                                          break;
-                                  }
-                              } while (opcao != 9);
-                              break;
-
-                          case 3:
-                              InsertAdotarAnimais(conexaoSql);
-                              break;
-
+                                  case 2:
+                                      EditarDadosAnimal();
+                                    Console.ReadKey();
+                                    break;
+                              }
+                          } while (opcao != 9);
+                          break;
+                    
+                    case 3:
+                        AdicionarAnimaisAdotados();
+                        Console.Read();
+                        break;
+                        
                           case 4:
                               do
                               {
@@ -1754,9 +1213,8 @@ namespace PONG
 
                                   Console.WriteLine("\n\nSELECIONE UMA OPÇÃO: \n");
                                   Console.WriteLine("1 - ADOTANTES ");
-                                  Console.WriteLine("2 - ANIMAIS");
-                                  Console.WriteLine("3 - ANIMAIS DISPONIVEIS PARA ADOÇÃO");
-                                  Console.WriteLine("4 - ANIMAIS ADOTADOS");
+                                  Console.WriteLine("2 - ANIMAIS");                                  
+                                  Console.WriteLine("3 - ANIMAIS ADOTADOS");
 
                                   Console.WriteLine("\n9 - VOLTAR AO MENU ANTERIOR");
                                   Console.Write("\nOpção: ");
@@ -1773,7 +1231,7 @@ namespace PONG
                                       validacao = true;
                                       Console.ReadKey();
                                   }
-                                  if (opcao < 1 || opcao > 4 && opcao != 9)
+                                  if (opcao < 1 || opcao > 3 && opcao != 9)
                                   {
                                       if (!validacao)
                                       {
@@ -1787,24 +1245,19 @@ namespace PONG
                                   switch (opcao)
                                   {
                                       case 1:
-                                          ImprimirDadosAdotantes(conexaoSql);
-                                          break;
-
+                                          ImprimirDadosAdotantes();
+                                          break;                                    
 
                                       case 2:
-                                          ImprimirDadosAnimais(conexaoSql);
-                                          break;
+                                          ImprimirDadosAnimais();
+                                          break;                                    
 
                                       case 3:
-                                          ImprimirDadosAnimaisDisponiveis(conexaoSql);
+                                          ImprimirDadosAdocao();
                                           break;
-
-                                      case 4:
-                                          ImprimirDadosAdocao(conexaoSql);
-                                          break;
-                                  }
-                              } while (opcao != 9);
-                              break;*/
+                            }
+                        } while (opcao != 9);
+                              break;
                 }
             } while (opcao != 0);
         }

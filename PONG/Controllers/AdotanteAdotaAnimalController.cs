@@ -19,6 +19,15 @@ namespace Controllers
             return _adotanteServices.InsertAAAnimal(aaa);
         }
 
+        public int GetQuantidadeAnimaisAdotados(string cpf)
+        {
+            return _adotanteServices.GetQuantidadeAnimaisAdotados(cpf);
+        }
+        public bool DeleteADisponivel(int chip)
+        {
+            return _adotanteServices.DeleteADisponivel(chip);
+        }
+
         public AdotanteAdotaAnimal GetAAAnimal(string aaa)
         {
             return _adotanteServices.GetAAAnimal(aaa);

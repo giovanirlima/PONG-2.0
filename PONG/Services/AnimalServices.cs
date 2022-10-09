@@ -26,22 +26,41 @@ namespace Services
                 return true;
             }            
         }
-
+        public bool UpdateAdotante(int chip, string paramentro, string value)
+        {
+            using (var db = new SqlConnection(_conexao))
+            {
+                var query = $"UPDATE Animal SET {paramentro} = '{value}' WHERE CHIP = '{chip}'";
+                db.Execute(query);
+                return true;
+            }
+        }
         public bool GetSpecific(int chip)
+        {       
+            using (var db = new SqlConnection(_conexao))
+            {
+                db.Open();
+                var query = $"SELECT * FROM Animal WHERE CHIP = {chip}";
+                var animal = db.Query<Animal>(query).FirstOrDefault();
+
+                if (animal != null)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+        public Animal GetOne(int chip)
         {
             Adotante adotante = new();
 
             using (var db = new SqlConnection(_conexao))
             {
                 db.Open();
-                var query = $"SELECT * FROM Animal WHERE CHIP = {chip}";
-                adotante = db.Query<Adotante>(query).FirstOrDefault();
+                var query = $"SELECT * FROM Animal WHERE CHIP = '{chip}'";
+                var animal = db.Query<Animal>(query).FirstOrDefault();
 
-                if (adotante != null)
-                {
-                    return true;
-                }
-                return false;
+                return animal;
             }
         }
         public List<Animal> GetAll()
@@ -52,11 +71,7 @@ namespace Services
                 var animal = db.Query<Animal>(Animal.SELECT);
                 return (List<Animal>)animal;
             }
-        }
-
-
-
-        #region AnimalDP
+        }        
         public bool InsertAnimalDP(Animal animal)
         {
             using (var db = new SqlConnection(_conexao))
@@ -66,8 +81,20 @@ namespace Services
                 return true;
             }
         }
-        #endregion
+        public bool GetSpecificAAA(int chip)
+        {
+            using (var db = new SqlConnection(_conexao))
+            {
+                db.Open();
+                var query = $"SELECT * FROM Animais_Disponiveis WHERE CHIP = '{chip}'";
+                var count = db.Query<int>(query).FirstOrDefault();
 
-
+                if (count > 0)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }               
     }
 }

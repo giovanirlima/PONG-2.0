@@ -22,18 +22,31 @@ namespace Controllers
         {
             return _animalServices.InsertAnimal(animal);
         }
-
+        public bool UpdateAnimal(int chip, string paramentro, string value)
+        {
+            return _animalServices.UpdateAdotante(chip, paramentro, value);
+        }
+        public bool GetSpecif(int chip)
+        {
+            return _animalServices.GetSpecific(chip);
+        }
+        public Animal GetOne(int chip)
+        {
+            return _animalServices.GetOne(chip);
+        }
         public List<Animal> GetAll()
         {
             return _animalServices.GetAll();
         }
 
-
-
         #region Animal DP
         public bool InsertAnimalDP(Animal animal)
         {
             return _animalServices.InsertAnimalDP(animal);
+        }
+        public bool GetSpecificAAA(int chip)
+        {
+            return _animalServices.GetSpecificAAA(chip);
         }
         #endregion
     }
